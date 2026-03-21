@@ -189,6 +189,18 @@
             style="color:#ff4466">0</span></div>
         <div class="hp-stat"><span class="hs-label">DAMAGE BONUS</span><span class="hs-val" id="hp-dmgb">+0%</span>
         </div>
+        
+        <div id="stat-points-container" style="margin-top:20px; border-top:1px solid rgba(255,255,255,0.1); padding-top:15px;">
+          <div class="hp-title" style="display:flex; justify-content:space-between;">
+            STAT POINTS <span id="hp-sp-count" style="color:#ffaa00; font-size:16px;">0</span>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:8px; margin-top:10px;">
+            <div class="hp-stat"><span class="hs-label" style="font-size:10px;">HEALTH (+5)</span><div style="display:flex;gap:10px;align-items:center;"><span class="hs-val" id="stat-hp">0</span><button class="hp-btn" style="padding:2px 8px;margin:0;font-size:12px;background:#44ffaa22;color:#44ffaa" onclick="allocateStat('hp')">+</button></div></div>
+            <div class="hp-stat"><span class="hs-label" style="font-size:10px;">DAMAGE (+2%)</span><div style="display:flex;gap:10px;align-items:center;"><span class="hs-val" id="stat-dmg">0</span><button class="hp-btn" style="padding:2px 8px;margin:0;font-size:12px;background:#44ffaa22;color:#44ffaa" onclick="allocateStat('dmg')">+</button></div></div>
+            <div class="hp-stat"><span class="hs-label" style="font-size:10px;">ENERGY (+2)</span><div style="display:flex;gap:10px;align-items:center;"><span class="hs-val" id="stat-energy">0</span><button class="hp-btn" style="padding:2px 8px;margin:0;font-size:12px;background:#44ffaa22;color:#44ffaa" onclick="allocateStat('energy')">+</button></div></div>
+            <div class="hp-stat"><span class="hs-label" style="font-size:10px;">SPEED (+0.5)</span><div style="display:flex;gap:10px;align-items:center;"><span class="hs-val" id="stat-speed">0</span><button class="hp-btn" style="padding:2px 8px;margin:0;font-size:12px;background:#44ffaa22;color:#44ffaa" onclick="allocateStat('speed')">+</button></div></div>
+          </div>
+        </div>
       </div>
       <div class="hp-col">
         <div class="hp-title">⚔ PVP SCOREBOARD</div>

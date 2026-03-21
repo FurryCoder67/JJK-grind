@@ -10,6 +10,7 @@
         kills: totalKills, pvpWins: pvpWins, pvpLosses: pvpLosses,
         avatar: { hairColor: AC.hairColor, hairStyle: AC.hairStyle, skinColor: AC.skinColor, outfitColor: AC.outfitColor, eyeColor: AC.eyeColor },
         coins: player.coins || 0, upgrades: player.upgrades || { hp: 0, energy: 0, speed: 0, damage: 0, regen: 0 },
+        statPoints: player.statPoints || 0, stats: player.stats || { hp:0, dmg:0, energy:0, speed:0 },
         timestamp: Date.now()
       };
       try { localStorage.setItem(SAVE_KEY, JSON.stringify(data)); } catch (e) { }
@@ -29,6 +30,14 @@
       player.energyRegen = data.energyRegen || 8; player.speed = data.speed || 12; player.damageBonus = data.damageBonus || 1;
       totalKills = data.kills || 0; pvpWins = data.pvpWins || 0; pvpLosses = data.pvpLosses || 0;
       player.coins = data.coins || 0; player.upgrades = data.upgrades || { hp: 0, energy: 0, speed: 0, damage: 0, regen: 0 };
+      player.statPoints = data.statPoints === undefined ? 0 : data.statPoints; player.stats = data.stats || { hp:0, dmg:0, energy:0, speed:0 };
+      
+      // Retroactive point grant for older saves
+      const usedStats = player.stats.hp + player.stats.dmg + player.stats.energy + player.stats.speed;
+      if (player.statPoints === 0 && usedStats === 0 && player.level > 1) {
+        player.statPoints = (player.level - 1) * 3;
+      }
+      
       if (data.avatar) { AC.hairColor = data.avatar.hairColor; AC.hairStyle = data.avatar.hairStyle; AC.skinColor = data.avatar.skinColor; AC.outfitColor = data.avatar.outfitColor; AC.eyeColor = data.avatar.eyeColor; }
       const tech = TECHNIQUES.find(t => t.id === data.techId);
       if (tech) { playerTech = tech; techMastery = data.techMastery || 0; techMoveCDs = new Array(tech.moves.length).fill(0); }

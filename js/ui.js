@@ -128,11 +128,44 @@
       document.getElementById('hp-pvpw').textContent = pvpWins;
       document.getElementById('hp-pvpl').textContent = pvpLosses;
       document.getElementById('hp-dmgb').textContent = '+' + ((player.damageBonus - 1) * 100).toFixed(1) + '%';
+      
+      // Update Stat Points UI
+      updateStatUI();
+
       document.getElementById('reroll-cost').textContent = '(' + Math.min(9999, player.level * 20) + ' XP)';
       buildSkillGrid();
       const tb = document.getElementById('hp-pvp-table'); tb.innerHTML = '';
       pvpBots.forEach(b => { const r = document.createElement('div'); r.className = 'pvp-score-row'; r.innerHTML = `<span class="ps-name" style="color:${b.tech.color}">${b.name}</span><span class="ps-kills" title="your kills">K:${b.deaths}</span><span class="ps-deaths" title="their kills">D:${b.kills}</span>`; tb.appendChild(r); });
     }
+    
+    function updateStatUI() {
+      if (!player.stats) player.stats = { hp:0, dmg:0, energy:0, speed:0 };
+      if (player.statPoints === undefined) player.statPoints = 0;
+      
+      document.getElementById('hp-sp-count').textContent = player.statPoints;
+      document.getElementById('stat-hp').textContent = player.stats.hp;
+      document.getElementById('stat-dmg').textContent = player.stats.dmg;
+      document.getElementById('stat-energy').textContent = player.stats.energy;
+      document.getElementById('stat-speed').textContent = player.stats.speed;
+
+      // Disable buttons if no points
+      const btns = document.querySelectorAll('#stat-points-container .hp-btn');
+      btns.forEach(b => {
+        if (player.statPoints <= 0) { b.style.opacity = '0.3'; b.style.pointerEvents = 'none'; }
+        else { b.style.opacity = '1'; b.style.pointerEvents = 'auto'; }
+      });
+    }
+
+    function allocateStat(statId) {
+      if (player.statPoints <= 0) return;
+      player.statPoints--;
+      player.stats[statId]++;
+      recalcStats();
+      updateBarsUI();
+      updateStatUI();
+      document.getElementById('hp-dmgb').textContent = '+' + ((player.damageBonus - 1) * 100).toFixed(1) + '%';
+    }
+
     function closeHomePanel() { homeOpen = false; document.getElementById('home-panel').classList.remove('open'); }
     function rerollTech() {
       const cost = Math.min(9999, player.level * 20); if (player.xp < cost) { showMasteryNotif('⚠ Not enough XP'); return; }

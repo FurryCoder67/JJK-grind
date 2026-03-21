@@ -9,6 +9,7 @@
       lightAttackCD: 0, heavyAttackCD: 0, invincible: false, invincibleTimer: 0, hitFlashTimer: 0, hitStaggerTimer: 0,
       currentAttackType: 'light', currentComboHit: 0,
       level: 1, xp: 0, xpToNext: 100, damageBonus: 1, inSafeZone: false, name: 'Sorcerer',
+      statPoints: 0, stats: { hp: 0, dmg: 0, energy: 0, speed: 0 },
     };
     function getXpToNext(lvl) { return Math.floor(100 + lvl * 30); }
     function getLevelTitle(lvl) {
@@ -16,15 +17,36 @@
       if (lvl >= 501) return 'Special Grade ★'; if (lvl >= 301) return 'Special Grade'; if (lvl >= 101) return 'Grade 1 Sorcerer';
       if (lvl >= 51) return 'Grade 2 Sorcerer'; if (lvl >= 11) return 'Semi-Grade'; return 'Cursed Novice';
     }
+    function recalcStats() {
+      // Base stats + Level scaling + Stat Allocations + Coin Upgrades
+      const u = player.upgrades || { hp:0, energy:0, speed:0, regen:0, damage:0 };
+      const s = player.stats || { hp:0, dmg:0, energy:0, speed:0 };
+
+      // Health
+      const oldMaxHP = player.maxHealth;
+      player.maxHealth = 100 + Math.floor(player.level / 10) * 5 + (u.hp * 10) + (s.hp * 5);
+      if (player.health > player.maxHealth) player.health = player.maxHealth;
+      if (player.maxHealth > oldMaxHP) player.health += (player.maxHealth - oldMaxHP); // heal the difference
+
+      // Energy
+      player.maxEnergy = 100 + Math.floor(player.level / 10) * 2 + (u.energy * 5) + (s.energy * 2);
+      player.energyRegen = 8 + Math.floor(player.level / 50) * 0.5 + (u.regen * 1) + (s.energy * 0.5);
+
+      // Speed
+      player.speed = 12 + Math.floor(player.level / 50) * 0.3 + (u.speed * 0.5) + (s.speed * 0.5);
+
+      // Damage Bonus
+      player.damageBonus = 1 + (player.level - 1) * 0.005 + (u.damage * 0.03) + (s.dmg * 0.02);
+    }
     function gainXP(amt) {
       if (player.level >= MAX_LVL) return; player.xp += amt;
       while (player.xp >= player.xpToNext && player.level < MAX_LVL) { player.xp -= player.xpToNext; player.level++; player.xpToNext = getXpToNext(player.level); onLevelUp(); }
       updateLevelUI();
     }
     function onLevelUp() {
-      if (player.level % 10 === 0) { player.maxHealth += 5; player.health = Math.min(player.health + 5, player.maxHealth); player.maxEnergy += 2; }
-      if (player.level % 50 === 0) { player.speed += 0.3; player.energyRegen += 0.5; }
-      player.damageBonus = 1 + (player.level - 1) * 0.005;
+      player.statPoints += 3;
+      recalcStats();
+      
       const el = document.getElementById('lvlup');
       el.innerHTML = `LEVEL UP!<br><span style="font-size:24px;color:#fff">Lv.${player.level}</span><br><span style="font-size:14px;color:${playerTech ? playerTech.color : '#ffdd44'}">${getLevelTitle(player.level)}</span>`;
       el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
