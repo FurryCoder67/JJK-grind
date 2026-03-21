@@ -66,25 +66,37 @@
       document.getElementById('ui').appendChild(el); setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, isCrit ? 1200 : 1000);
     }
     const ehpEls = [];
+    const _ehpPool = []; // Reusable HP bar DOM nodes
+    function _getEhpEl() {
+      if (_ehpPool.length > 0) return _ehpPool.pop();
+      const cont = document.createElement('div'); cont.className = 'ehp';
+      const nm = document.createElement('div'); nm.className = 'ehp-name'; cont.appendChild(nm);
+      const bar = document.createElement('div'); bar.className = 'ehp-bar';
+      const fill = document.createElement('div'); fill.className = 'ehp-fill'; bar.appendChild(fill);
+      cont.appendChild(bar);
+      document.getElementById('ui').appendChild(cont);
+      return cont;
+    }
     function updateEnemyHPBars() {
-      ehpEls.forEach(el => { if (el.parentNode) el.parentNode.removeChild(el); }); ehpEls.length = 0;
+      // Return all to pool
+      ehpEls.forEach(el => { el.style.display = 'none'; _ehpPool.push(el); }); ehpEls.length = 0;
       const allUnits = [...enemies, ...pvpBots];
       allUnits.forEach(e => {
         if (e.dead || e.health >= e.maxHealth) return;
         const wp = e.group.position.clone().add(new THREE.Vector3(0, 3.2 * (e.cfg ? e.cfg.size : 1), 0));
         const sp = wp.project(camera); if (sp.z > 1) return;
         const x = (sp.x * 0.5 + 0.5) * innerWidth, y = (-sp.y * 0.5 + 0.5) * innerHeight;
-        const cont = document.createElement('div'); cont.className = 'ehp'; cont.style.left = (x - 40) + 'px'; cont.style.top = y + 'px';
-        const nm = document.createElement('div'); nm.className = 'ehp-name';
+        const cont = _getEhpEl();
+        cont.style.display = ''; cont.style.left = (x - 40) + 'px'; cont.style.top = y + 'px';
+        const nm = cont.firstChild;
         const isPvp = !e.cfg;
         const isElite = !isPvp && e.isElite;
         const col = isPvp ? e.tech.color : (e.cfg.boss ? '#ff6600' : (isElite ? '#ffaa00' : '#ff4466'));
-        nm.style.color = col; nm.textContent = isPvp ? e.name : (e.cfg.boss ? '★ BOSS: ' + e.type.toUpperCase() : (isElite ? '⚡ ELITE: ' + e.type.toUpperCase() : e.type.toUpperCase()));
-        const bar = document.createElement('div'); bar.className = 'ehp-bar'; bar.style.width = isPvp ? '80px' : '60px';
-        const fill = document.createElement('div'); fill.className = 'ehp-fill'; fill.style.background = isPvp ? `linear-gradient(90deg,${e.tech.color},${e.tech.color}aa)` : 'linear-gradient(90deg,#ff2244,#ff6644)';
+        nm.style.color = col; nm.textContent = isPvp ? e.name : (e.cfg.boss ? '★ BOSS' : (isElite ? '⚡ ELITE' : e.type.toUpperCase()));
+        const bar = cont.children[1]; bar.style.width = isPvp ? '80px' : '60px';
+        const fill = bar.firstChild; fill.style.background = isPvp ? `linear-gradient(90deg,${e.tech.color},${e.tech.color}aa)` : 'linear-gradient(90deg,#ff2244,#ff6644)';
         fill.style.width = (e.health / e.maxHealth * 100) + '%';
-        bar.appendChild(fill); cont.appendChild(nm); cont.appendChild(bar);
-        document.getElementById('ui').appendChild(cont); ehpEls.push(cont);
+        ehpEls.push(cont);
       });
     }
 

@@ -34,9 +34,9 @@
       scene.add(ambientLight);
       sunLight = new THREE.DirectionalLight(0x6666ff, 0.7);
       sunLight.position.set(-30, 50, -20); sunLight.castShadow = true;
-      sunLight.shadow.mapSize.set(2048, 2048); 
-      sunLight.shadow.camera.left = -300; sunLight.shadow.camera.right = 300;
-      sunLight.shadow.camera.top = 300; sunLight.shadow.camera.bottom = -300; 
+      sunLight.shadow.mapSize.set(1024, 1024); 
+      sunLight.shadow.camera.left = -250; sunLight.shadow.camera.right = 250;
+      sunLight.shadow.camera.top = 250; sunLight.shadow.camera.bottom = -250; 
       sunLight.shadow.bias = -0.001;
       scene.add(sunLight);
 
@@ -80,28 +80,21 @@
         bridge.receiveShadow = true; bridge.castShadow = true;
         scene.add(bridge);
 
-        // Bridge lanterns
-        const numLights = Math.floor(bLen / 45);
+        // Bridge lanterns (visual-only pillars, no PointLights to save draw calls)
+        const numLights = Math.floor(bLen / 50);
         for (let j = 1; j < numLights; j++) {
            const t = j / numLights;
            const lx = isl.x * t, lz = isl.z * t;
-           
-           // Pillar
            const pm = new THREE.Mesh(new THREE.BoxGeometry(1.5, 4, 1.5), new THREE.MeshStandardMaterial({color: 0x111118}));
-           pm.position.set(lx, 2, lz); pm.castShadow = true; scene.add(pm);
-           
-           // Light source
-           const pl = new THREE.PointLight(0xffaa55, 1.5, 25);
-           pl.position.set(lx, 5, lz); scene.add(pl);
-           
-           // Bulb mesh
-           const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.5, 8, 8), new THREE.MeshBasicMaterial({color: 0xffaa55}));
+           pm.position.set(lx, 2, lz); scene.add(pm);
+           // Use a tiny emissive bulb instead of a real PointLight
+           const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.5, 6, 6), new THREE.MeshBasicMaterial({color: 0xffaa55}));
            bulb.position.set(lx, 4.5, lz); scene.add(bulb);
         }
       });
 
       // Floating rocks between islands
-      for (let i = 0; i < 22; i++) {
+      for (let i = 0; i < 12; i++) {
         const sz = 0.4 + Math.random() * 1.8;
         const geo = new THREE.DodecahedronGeometry(sz, 0);
         const mat = new THREE.MeshStandardMaterial({ color: 0x101020, roughness: 0.7, metalness: 0.2 });
@@ -113,11 +106,12 @@
         r.castShadow = true; scene.add(r); floatingRocks.push(r);
       }
       // Dust
-      const dg = new THREE.BufferGeometry(); const dp = new Float32Array(DUST_CNT * 3);
-      for (let i = 0; i < DUST_CNT; i++) { dp[i * 3] = (Math.random() - 0.5) * 130; dp[i * 3 + 1] = Math.random() * 25; dp[i * 3 + 2] = (Math.random() - 0.5) * 130; }
+      const dg = new THREE.BufferGeometry(); const dp = new Float32Array(180 * 3);
+      for (let i = 0; i < 180; i++) { dp[i * 3] = (Math.random() - 0.5) * 100; dp[i * 3 + 1] = Math.random() * 20; dp[i * 3 + 2] = (Math.random() - 0.5) * 100; }
       dg.setAttribute('position', new THREE.BufferAttribute(dp, 3));
       dustPts = new THREE.Points(dg, new THREE.PointsMaterial({ color: 0x6644aa, size: 0.12, transparent: true, opacity: 0.3 }));
       scene.add(dustPts);
+      const DUST_CNT_ACT = 180;
     }
 
     function buildIslandDecor(isl) {
