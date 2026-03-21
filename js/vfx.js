@@ -23,8 +23,7 @@
         spawnParticle(pos.clone().add(new THREE.Vector3(0, 1.5, 0)).add(fw.clone().multiplyScalar(1.5)), dir, sparkCol, 0.04 + Math.random() * 0.04, 0.2 + Math.random() * 0.15);
       }
       // Tiny point light flash
-      const fl = new THREE.PointLight(sparkCol, 3, 5); fl.position.copy(pos).add(fw.clone().multiplyScalar(2)).add(new THREE.Vector3(0, 1.5, 0));
-      scene.add(fl); setTimeout(() => scene.remove(fl), 60);
+      getLight(pos.clone().add(fw.clone().multiplyScalar(2)).add(new THREE.Vector3(0, 1.5, 0)), sparkCol, 3, 5, 60);
       cameraShake(0.08 + comboNum * 0.03);
     }
 
@@ -62,9 +61,7 @@
       if (isCrit) cameraZoom(0.4);
 
       // Impact light
-      const fl = new THREE.PointLight(col, isCrit ? 12 : 8, 15);
-      fl.position.copy(impactPos).add(new THREE.Vector3(0, 1.5, 0));
-      scene.add(fl); setTimeout(() => scene.remove(fl), 180);
+      getLight(impactPos.clone().add(new THREE.Vector3(0, 1.5, 0)), col, isCrit ? 12 : 8, 15, 180);
     }
 
     /* --- CURSED STRIKE (Q) VFX: energy charge + shockwave --- */
@@ -103,8 +100,7 @@
       cameraShake(0.5);
       cameraZoom(0.25);
       // Big light burst
-      const fl = new THREE.PointLight(techCol, 15, 25); fl.position.copy(pos).add(new THREE.Vector3(0, 2, 0));
-      scene.add(fl); setTimeout(() => scene.remove(fl), 400);
+      getLight(pos.clone().add(new THREE.Vector3(0, 2, 0)), techCol, 15, 25, 400);
     }
 
     /* --- TECHNIQUE-SPECIFIC VFX --- */
@@ -115,36 +111,88 @@
       const col = tech.hex;
 
       if (techId === 'limitless') {
-        // Swirling blue energy vortex
-        for (let i = 0; i < 30; i++) {
-          const angle = (i / 30) * Math.PI * 2;
-          const r = 1 + moveIdx * 2;
-          const vel = new THREE.Vector3(Math.cos(angle + elapsed * 3) * r * 4, Math.random() * 3, Math.sin(angle + elapsed * 3) * r * 4);
-          spawnParticle(pos.clone().add(new THREE.Vector3(0, 1.5, 0)), vel, 0x00ccff, 0.08, 0.6);
-        }
-        // Distortion sphere
-        const distMat = new THREE.MeshBasicMaterial({ color: 0x0088ff, transparent: true, opacity: 0.15, side: THREE.BackSide, depthWrite: false });
-        const dist = new THREE.Mesh(new THREE.SphereGeometry(range * 0.4, 16, 16), distMat);
-        dist.position.copy(pos).add(new THREE.Vector3(0, 1.5, 0));
-        scene.add(dist); hitFlashes.push({ mesh: dist, lifetime: 0.6, maxLifetime: 0.6 });
-        if (moveIdx === 1) {
-          // Blue: attraction pull lines
-          for (let i = 0; i < 12; i++) {
-            const ang = (i / 12) * Math.PI * 2;
-            const lineMat = new THREE.MeshBasicMaterial({ color: 0x4488ff, transparent: true, opacity: 0.7, depthWrite: false });
-            const line = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, range * 0.8, 4), lineMat);
-            line.position.copy(pos).add(new THREE.Vector3(Math.cos(ang) * range * 0.4, 1.5, Math.sin(ang) * range * 0.4));
-            line.rotation.z = Math.PI / 2; line.rotation.y = ang;
-            scene.add(line); hitFlashes.push({ mesh: line, lifetime: 0.4, maxLifetime: 0.4 });
+        if (moveIdx === 0) {
+          // INFINITY — translucent barrier dome with spinning rings
+          const domeMat = new THREE.MeshBasicMaterial({ color: 0x00ccff, transparent: true, opacity: 0.12, side: THREE.DoubleSide, depthWrite: false });
+          const dome = new THREE.Mesh(new THREE.SphereGeometry(range * 0.5, 20, 20), domeMat);
+          dome.position.copy(pos).add(new THREE.Vector3(0, 1.5, 0));
+          scene.add(dome); hitFlashes.push({ mesh: dome, lifetime: 1.2, maxLifetime: 1.2, baseScale: range * 0.5, isSphere: true });
+          // Spinning rings around the dome
+          for (let r = 0; r < 3; r++) {
+            const ringMat = new THREE.MeshBasicMaterial({ color: [0x00ccff, 0x0088ff, 0x44ddff][r], transparent: true, opacity: 0.6, depthWrite: false });
+            const ring = new THREE.Mesh(new THREE.TorusGeometry(range * 0.35 + r * 0.4, 0.04, 6, 32), ringMat);
+            ring.position.copy(pos).add(new THREE.Vector3(0, 1.5, 0));
+            ring.rotation.set(r * 0.8, r * 1.2, r * 0.5);
+            scene.add(ring); hitFlashes.push({ mesh: ring, lifetime: 1.0, maxLifetime: 1.0, baseScale: 1, isSphere: false });
           }
+          for (let i = 0; i < 20; i++) {
+            const a = (i / 20) * Math.PI * 2;
+            spawnParticle(pos.clone().add(new THREE.Vector3(Math.cos(a) * 2, 1.5, Math.sin(a) * 2)),
+              new THREE.Vector3(-Math.cos(a) * 3, Math.random() * 2, -Math.sin(a) * 3), 0x00ccff, 0.06, 0.8);
+          }
+        } else if (moveIdx === 1) {
+          // BLUE — swirling blue orb that pulls inward
+          const orbMat = new THREE.MeshBasicMaterial({ color: 0x0066ff, transparent: true, opacity: 0.85, depthWrite: false });
+          const orb = new THREE.Mesh(new THREE.SphereGeometry(0.6, 16, 16), orbMat);
+          orb.position.copy(pos).add(new THREE.Vector3(0, 2, 0));
+          scene.add(orb); hitFlashes.push({ mesh: orb, lifetime: 1.5, maxLifetime: 1.5, baseScale: 0.6, isSphere: true });
+          // Glowing core
+          const coreMat = new THREE.MeshBasicMaterial({ color: 0xaaddff, transparent: true, opacity: 0.95, depthWrite: false });
+          const core = new THREE.Mesh(new THREE.SphereGeometry(0.25, 12, 12), coreMat);
+          core.position.copy(pos).add(new THREE.Vector3(0, 2, 0));
+          scene.add(core); hitFlashes.push({ mesh: core, lifetime: 1.3, maxLifetime: 1.3, baseScale: 0.25, isSphere: true });
+          // Distortion sphere (outer glow)
+          const distMat = new THREE.MeshBasicMaterial({ color: 0x0044aa, transparent: true, opacity: 0.1, side: THREE.BackSide, depthWrite: false });
+          const dist = new THREE.Mesh(new THREE.SphereGeometry(2.5, 16, 16), distMat);
+          dist.position.copy(pos).add(new THREE.Vector3(0, 2, 0));
+          scene.add(dist); hitFlashes.push({ mesh: dist, lifetime: 1.2, maxLifetime: 1.2, baseScale: 2.5, isSphere: true });
+          // Spiral particles sucking INTO the orb
+          for (let i = 0; i < 50; i++) {
+            const a = (i / 50) * Math.PI * 6;
+            const r = 3 + (i / 50) * 5;
+            const start = pos.clone().add(new THREE.Vector3(Math.cos(a) * r, 1.5 + Math.random() * 2, Math.sin(a) * r));
+            const vel = new THREE.Vector3(-Math.cos(a) * r * 2, (2 - start.y + pos.y) * 2, -Math.sin(a) * r * 2);
+            spawnParticle(start, vel, [0x0066ff, 0x00ccff, 0x4488ff, 0xaaddff][i % 4], 0.05 + Math.random() * 0.06, 0.6 + Math.random() * 0.5);
+          }
+          // Pull lines converging to center
+          for (let i = 0; i < 16; i++) {
+            const ang = (i / 16) * Math.PI * 2;
+            const lineMat = new THREE.MeshBasicMaterial({ color: 0x4488ff, transparent: true, opacity: 0.5, depthWrite: false });
+            const line = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.06, range * 0.7, 4), lineMat);
+            line.position.copy(pos).add(new THREE.Vector3(Math.cos(ang) * range * 0.35, 2, Math.sin(ang) * range * 0.35));
+            line.lookAt(pos.clone().add(new THREE.Vector3(0, 2, 0)));
+            scene.add(line); hitFlashes.push({ mesh: line, lifetime: 0.8, maxLifetime: 0.8, baseScale: 1, isSphere: false });
+          }
+          getLight(pos.clone().add(new THREE.Vector3(0, 2, 0)), 0x0066ff, 12, 20, 800);
         } else if (moveIdx === 2) {
-          // Red: explosion push wave
-          const pushMat = new THREE.MeshBasicMaterial({ color: 0xff2244, transparent: true, opacity: 0.5, depthWrite: false, side: THREE.DoubleSide });
-          const push = new THREE.Mesh(new THREE.SphereGeometry(range * 0.6, 12, 12), pushMat);
-          push.position.copy(pos).add(new THREE.Vector3(0, 1.5, 0));
-          scene.add(push); hitFlashes.push({ mesh: push, lifetime: 0.4, maxLifetime: 0.4 });
-          for (let i = 0; i < 20; i++) spawnParticle(pos.clone().add(new THREE.Vector3(0, 1.5, 0)),
-            new THREE.Vector3((Math.random() - 0.5) * 18, Math.random() * 8, (Math.random() - 0.5) * 18), 0xff4466, 0.12, 0.5);
+          // RED — massive red repulsion blast expanding outward
+          const blastMat = new THREE.MeshBasicMaterial({ color: 0xff2244, transparent: true, opacity: 0.6, depthWrite: false, side: THREE.DoubleSide });
+          const blast = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 16), blastMat);
+          blast.position.copy(pos).add(new THREE.Vector3(0, 1.5, 0));
+          scene.add(blast); hitFlashes.push({ mesh: blast, lifetime: 0.8, maxLifetime: 0.8, baseScale: 1, isSphere: true });
+          // Red core
+          const coreMat = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.9, depthWrite: false });
+          const core = new THREE.Mesh(new THREE.SphereGeometry(0.5, 12, 12), coreMat);
+          core.position.copy(pos).add(new THREE.Vector3(0, 1.5, 0));
+          scene.add(core); hitFlashes.push({ mesh: core, lifetime: 0.5, maxLifetime: 0.5, baseScale: 0.5, isSphere: true });
+          // Multiple expanding rings
+          for (let r = 0; r < 4; r++) {
+            const ringMat = new THREE.MeshBasicMaterial({ color: [0xff2244, 0xff4466, 0xff0022, 0xff6644][r], transparent: true, opacity: 0.7, depthWrite: false, side: THREE.DoubleSide });
+            const ring = new THREE.Mesh(new THREE.RingGeometry(0.5 + r, 1.5 + r * 1.5, 32), ringMat);
+            ring.position.copy(pos).add(new THREE.Vector3(0, 0.3 + r * 0.3, 0)); ring.rotation.x = -Math.PI / 2;
+            scene.add(ring); hitFlashes.push({ mesh: ring, lifetime: 0.6 + r * 0.1, maxLifetime: 0.6 + r * 0.1, baseScale: 1, isSphere: false });
+          }
+          // Massive radial particle explosion
+          for (let i = 0; i < 60; i++) {
+            const a = Math.random() * Math.PI * 2;
+            const spd = 8 + Math.random() * 15;
+            spawnParticle(pos.clone().add(new THREE.Vector3(0, 1.5, 0)),
+              new THREE.Vector3(Math.cos(a) * spd, (Math.random() - 0.3) * 8, Math.sin(a) * spd),
+              [0xff2244, 0xff4466, 0xff0000, 0xffaa44][i % 4], 0.1 + Math.random() * 0.12, 0.5 + Math.random() * 0.4);
+          }
+          spawnDebris(pos, 12);
+          getLight(pos.clone().add(new THREE.Vector3(0, 2, 0)), 0xff2244, 18, 30, 500);
+          triggerSlowMo(0.25);
         }
 
       } else if (techId === 'bloodManip') {
@@ -239,8 +287,7 @@
           scene.add(bolt); hitFlashes.push({ mesh: bolt, lifetime: 0.25, maxLifetime: 0.25 });
         }
         // Flash the whole scene briefly
-        const fl = new THREE.PointLight(0xffffff, 20, 40); fl.position.copy(pos).add(new THREE.Vector3(0, 5, 0));
-        scene.add(fl); setTimeout(() => scene.remove(fl), 80);
+        getLight(pos.clone().add(new THREE.Vector3(0, 5, 0)), 0xffffff, 20, 40, 80);
         for (let i = 0; i < 30; i++) {
           spawnParticle(pos.clone().add(new THREE.Vector3(0, 3, 0)),
             new THREE.Vector3((Math.random() - 0.5) * 12, Math.random() * 10, (Math.random() - 0.5) * 12), 0x88ddff, 0.05, 0.2);
@@ -267,18 +314,30 @@
     }
 
     // ═══════════════════ DEBRIS SYSTEM ═══════════════════
+    const debrisPool = [];
+    const baseBoxGeo = new THREE.BoxGeometry(1, 1, 1);
+    const baseDodGeo = new THREE.DodecahedronGeometry(1, 0);
+    const debrisMat = new THREE.MeshStandardMaterial({ color: 0x333340, roughness: 0.9, metalness: 0.1, transparent: true });
+
     // Spawns rock/ground chunks on heavy impacts
     function spawnDebris(pos, count) {
       for (let i = 0; i < count; i++) {
         const size = 0.08 + Math.random() * 0.18;
-        const geo = Math.random() > 0.5 ? new THREE.BoxGeometry(size, size, size) : new THREE.DodecahedronGeometry(size, 0);
-        const mat = new THREE.MeshStandardMaterial({ color: 0x333340, roughness: 0.9, metalness: 0.1 });
-        const m = new THREE.Mesh(geo, mat);
+        let m;
+        if (debrisPool.length > 0) {
+          m = debrisPool.pop();
+          m.visible = true;
+          m.material.opacity = 1;
+        } else {
+          const geo = Math.random() > 0.5 ? baseBoxGeo : baseDodGeo;
+          m = new THREE.Mesh(geo, debrisMat);
+          scene.add(m);
+        }
+        m.scale.setScalar(size);
         m.position.copy(pos).add(new THREE.Vector3((Math.random() - 0.5) * 1, 0.2, (Math.random() - 0.5) * 1));
         m.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
         const vel = new THREE.Vector3((Math.random() - 0.5) * 8, 3 + Math.random() * 7, (Math.random() - 0.5) * 8);
-        scene.add(m);
-        particles.push({ mesh: m, velocity: vel, lifetime: 1.0 + Math.random() * 0.5, maxLifetime: 1.5, gravity: -15 });
+        particles.push({ mesh: m, velocity: vel, lifetime: 1.0 + Math.random() * 0.5, maxLifetime: 1.5, gravity: -15, baseSize: size, isDebris: true });
       }
     }
 

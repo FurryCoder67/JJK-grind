@@ -69,8 +69,8 @@ function updatePlayer(dt) {
   }
   if (!player.grounded) player.velocity.y -= 35 * dt;
   player.group.position.y += player.velocity.y * dt;
-  const isl = isOnIsland(player.group.position.x, player.group.position.z);
-  if (isl && player.group.position.y <= 0.05 && player.velocity.y <= 0) { player.group.position.y = 0; player.velocity.y = 0; player.grounded = true; }
+  const validGround = isGrounded(player.group.position.x, player.group.position.z);
+  if (validGround && player.group.position.y <= 0.05 && player.velocity.y <= 0) { player.group.position.y = 0; player.velocity.y = 0; player.grounded = true; }
   if (player.group.position.y < -20) respawnPlayer();
 
   animPlayerModel(dt);
@@ -284,19 +284,116 @@ function animPlayerModel(dt) {
       ['leftKnuckle', 'rightKnuckle'].forEach(n => { const k = g.getObjectByName(n); if (k) k.material.opacity = 0.8; });
 
     } else if (atkType === 'technique') {
-      // Technique moves - dramatic pose with energy channeling
       const dur = 0.4;
       const t = Math.max(0, 1 - (tp / dur));
       const sw = Math.sin(t * Math.PI);
-      // One hand extended forward, other pulled back
-      if (rAP) { rAP.rotation.x = -sw * 1.5; rAP.rotation.z = -sw * 0.15; }
-      if (rEP) { rEP.rotation.x = 0; }
-      if (lAP) { lAP.rotation.x = sw * 0.6; lAP.rotation.z = sw * 0.3; }
-      if (lEP) { lEP.rotation.x = -sw * 0.8; }
-      torso.rotation.x = sw * 0.15; // lean into it
-      torso.rotation.y = -sw * 0.2;
-      hips.rotation.y = sw * 0.1;
-      // Both knuckles glow with technique color
+      const tid = playerTech ? playerTech.id : '';
+      const midx = player.currentMoveIdx || 0;
+
+      if (tid === 'limitless') {
+        if (midx === 0) {
+           // Infinity: Hand raised casually, fingers out
+           if (rAP) { rAP.rotation.x = -sw * 1.5; rAP.rotation.z = -sw * 0.4; } 
+           if (rEP) rEP.rotation.x = -sw * 0.2;
+           if (lAP) lAP.rotation.x = sw * 0.2;
+           torso.rotation.x = -sw * 0.1;
+        } else if (midx === 1) {
+           // Blue: Arm extended forward, palm open (attraction)
+           if (rAP) { rAP.rotation.x = -sw * 1.8; rAP.rotation.z = -sw * 0.1; }
+           if (lAP) lAP.rotation.x = sw * 0.4;
+           torso.rotation.x = sw * 0.15; torso.rotation.y = -sw * 0.2;
+        } else if (midx === 2) {
+           // Red: Pointed fingers (Hollow Purple style windup)
+           if (rAP) { rAP.rotation.x = -sw * 1.6; rAP.rotation.z = sw * 0.2; rAP.rotation.y = sw * 0.5; }
+           if (lAP) { lAP.rotation.x = -sw * 1.6; lAP.rotation.z = -sw * 0.2; lAP.rotation.y = -sw * 0.5; }
+           torso.rotation.x = -sw * 0.2;
+        } else {
+           // Domain: Hands crossed
+           if (rAP) { rAP.rotation.x = -sw * 1.4; rAP.rotation.z = sw * 0.8; rAP.rotation.y = sw * 1.0; }
+           if (lAP) { lAP.rotation.x = -sw * 1.4; lAP.rotation.z = -sw * 0.8; lAP.rotation.y = -sw * 1.0; }
+           if (rEP) rEP.rotation.x = -sw * 1.5; if (lEP) lEP.rotation.x = -sw * 1.5;
+           torso.rotation.x = sw * 0.1;
+        }
+      } else if (tid === 'tenShadows') {
+        // Divine Dog (wolf hand sign)
+        if (midx === 0 || midx === 1) {
+           if (rAP) { rAP.rotation.x = -sw * 1.2; rAP.rotation.z = sw * 0.6; }
+           if (lAP) { lAP.rotation.x = -sw * 1.2; lAP.rotation.z = -sw * 0.6; }
+           if (rEP) rEP.rotation.x = -sw * 1.5; if (lEP) lEP.rotation.x = -sw * 1.5;
+           torso.rotation.x = sw * 0.3; // leaning forward aggressively
+        } else {
+           // Chimera shadow garden - arms wide open
+           if (rAP) { rAP.rotation.x = -sw * 0.5; rAP.rotation.z = -sw * 1.2; }
+           if (lAP) { lAP.rotation.x = -sw * 0.5; lAP.rotation.z = sw * 1.2; }
+           torso.rotation.x = -sw * 0.4; head.rotation.x = -sw * 0.3;
+        }
+      } else if (tid === 'bloodManip') {
+        // Piercing blood: Hands clapped together pointer forward
+        if (midx === 1) {
+           if (rAP) { rAP.rotation.x = -sw * 1.57; rAP.rotation.z = sw * 0.4; rAP.rotation.y = sw * 0.3; }
+           if (lAP) { lAP.rotation.x = -sw * 1.57; lAP.rotation.z = -sw * 0.4; lAP.rotation.y = -sw * 0.3; }
+           torso.rotation.x = sw * 0.2;
+           if (hips) hips.position.y = 1.1 - sw * 0.1; // lower stance
+        } else {
+           // generic sweep
+           if (rAP) { rAP.rotation.x = -sw * 1.2; rAP.rotation.z = -sw * 0.8; }
+           if (lAP) { lAP.rotation.x = -sw * 1.2; lAP.rotation.z = sw * 0.8; }
+           torso.rotation.y = -sw * 0.4;
+        }
+      } else if (tid === 'disasterFlames') {
+         // Flame arrow: drawing a bow
+         if (midx === 1) {
+            if (lAP) { lAP.rotation.x = -sw * 1.57; lAP.rotation.z = sw * 0.2; } // bow arm extended
+            if (rAP) { rAP.rotation.x = -sw * 1.57; rAP.rotation.z = -sw * 0.8; rEP.rotation.x = -sw * 1.5; } // draw string
+            torso.rotation.y = sw * 0.5; head.rotation.y = -sw * 0.5; // looking over shoulder
+         } else if (midx === 2) {
+            // Meteor: hands raised to sky
+            if (rAP) { rAP.rotation.x = -sw * 3.0; rAP.rotation.z = -sw * 0.3; }
+            if (lAP) { lAP.rotation.x = -sw * 3.0; lAP.rotation.z = sw * 0.3; }
+            torso.rotation.x = -sw * 0.4; head.rotation.x = -sw * 0.5;
+         } else {
+            // Ember insects
+            if (rAP) rAP.rotation.x = -sw * 1.4; if (lAP) lAP.rotation.x = sw * 0.4;
+         }
+      } else if (tid === 'boogieWoogie') {
+         // Clap!
+         if (midx <= 2) {
+            if (rAP) { rAP.rotation.x = -sw * 1.5; rAP.rotation.z = sw * 0.6; rAP.rotation.y = sw * 0.8; }
+            if (lAP) { lAP.rotation.x = -sw * 1.5; lAP.rotation.z = -sw * 0.6; lAP.rotation.y = -sw * 0.8; }
+            if (rEP) rEP.rotation.x = -sw * 1.0; if (lEP) lEP.rotation.x = -sw * 1.0;
+         } else {
+            // Domain swap dance
+            if (rAP) rAP.rotation.x = -sw * 2; if (lAP) lAP.rotation.x = -sw * 2;
+            torso.rotation.y = Math.sin(t * Math.PI * 4) * 0.5; // spinning
+         }
+      } else if (tid === 'cursedSpeech') {
+         // Hand near mouth (megaphone)
+         if (rAP) { rAP.rotation.x = -sw * 2.2; rAP.rotation.z = sw * 0.8; rAP.rotation.y = sw * 1.2; }
+         if (rEP) { rEP.rotation.x = -sw * 2.0; }
+         if (lAP) { lAP.rotation.x = sw * 0.2; }
+         torso.rotation.x = sw * 0.2; head.rotation.x = sw * 0.1;
+      } else if (tid === 'idleTransfig') {
+         // Crazy hand poses
+         if (midx === 3) {
+            // Hands grabbing face
+            if (rAP) { rAP.rotation.x = -sw * 3.0; rAP.rotation.z = sw * 0.5; }
+            if (lAP) { lAP.rotation.x = -sw * 3.0; lAP.rotation.z = -sw * 0.5; }
+            if (rEP) { rEP.rotation.x = -sw * 2.5; } if (lEP) { lEP.rotation.x = -sw * 2.5; }
+            torso.rotation.x = sw * 0.6; torso.rotation.z = (Math.random()-0.5) * sw * 0.4;
+         } else {
+            // Hand extending mutating
+            if (rAP) { rAP.rotation.x = -sw * 1.5; rAP.rotation.z = (Math.random()-0.5)*sw; }
+            if (lAP) { lAP.rotation.x = -sw * 1.5; lAP.rotation.z = (Math.random()-0.5)*sw; }
+         }
+      } else {
+         // Generic Technique moves
+         if (rAP) { rAP.rotation.x = -sw * 1.5; rAP.rotation.z = -sw * 0.15; }
+         if (rEP) { rEP.rotation.x = 0; }
+         if (lAP) { lAP.rotation.x = sw * 0.6; lAP.rotation.z = sw * 0.3; }
+         if (lEP) { lEP.rotation.x = -sw * 0.8; }
+         torso.rotation.x = sw * 0.15; torso.rotation.y = -sw * 0.2; hips.rotation.y = sw * 0.1;
+      }
+      
       ['leftKnuckle', 'rightKnuckle'].forEach(n => { const k = g.getObjectByName(n); if (k) k.material.opacity = sw * 0.7; });
 
     } else {

@@ -7,7 +7,14 @@
       transfigured: { hp: 105, dmg: 15, spd: 8, range: 2.5, atkCD: 0.8, col: 0xcc44ff, size: 1.1, xp: 65, ranged: false, boss: false },
       finger_bearer: { hp: 480, dmg: 35, spd: 2, range: 4.5, atkCD: 3, col: 0xff2200, size: 1.8, xp: 220, ranged: false, boss: true },
     };
-    const ZONE_SPAWNS = { void: ['grunt', 'cursed_worm', 'curse_user'], fire: ['brute', 'grunt', 'cursed_worm'], shadow: ['transfigured', 'grunt', 'cursed_worm'], light: ['curse_user', 'grunt', 'brute'], ruins: ['grunt', 'finger_bearer', 'brute', 'curse_user'], shrine: [] };
+    const ZONE_SPAWNS = { 
+        forest: ['grunt', 'cursed_worm', 'curse_user'], 
+        fire: ['brute', 'grunt', 'cursed_worm'], 
+        desert: ['transfigured', 'grunt', 'cursed_worm'], 
+        snow: ['curse_user', 'grunt', 'brute'], 
+        swamp: ['grunt', 'finger_bearer', 'brute', 'curse_user'], 
+        city: [] 
+    };
     const enemies = [];
 
     function buildEnemyParts(cfg, type) {
@@ -106,6 +113,7 @@
     }
     function killEnemy(enemy) {
       enemy.dead = true; totalKills++;
+      if (typeof updateQuestProgress !== 'undefined') updateQuestProgress('kill', 1);
 
       // Enhanced death animation - ragdoll-like tumble and fade
       const deathDur = 0.8; let deathT = 0;

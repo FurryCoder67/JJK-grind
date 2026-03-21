@@ -36,5 +36,5 @@
       // Use technique-specific VFX system
       spawnTechniqueVFX(pp.clone(), t.id, idx, move.range);
       spawnTechFX(pp.clone().add(new THREE.Vector3(0, 1.5, 0)), t.hex, move.range, idx === 0 ? 'burst' : (idx === 1 ? 'ring' : 'wave'));
-      player.isAttacking = true; player.attackTimer = 0.4; player.currentAttackType = 'technique';
+      player.isAttacking = true; player.attackTimer = 0.4; player.currentAttackType = 'technique'; player.currentMoveIdx = idx;
     }

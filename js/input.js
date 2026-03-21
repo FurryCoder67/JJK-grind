@@ -17,13 +17,14 @@
       if (e.code === 'KeyR') activateTechMove(1);
       if (e.code === 'KeyT') activateTechMove(2);
       if (e.code === 'KeyF') activateTechMove(3);
+      if (e.code === 'KeyG' && typeof interactWithNPC !== 'undefined') interactWithNPC();
     });
     document.addEventListener('keyup', e => { keys[e.code] = false; });
 
     document.addEventListener('mousemove', e => {
       // Pointer lock path (fallback when locked)
       if (ptrLocked) {
-        cameraYaw -= e.movementX * 0.003; cameraPitch -= e.movementY * 0.003;
+        cameraYaw -= e.movementX * 0.003; cameraPitch += e.movementY * 0.003;
         cameraPitch = Math.max(-0.5, Math.min(1.2, cameraPitch)); return;
       }
       // Right-click drag path
@@ -31,7 +32,7 @@
         const dx = e.clientX - lastMouseX, dy = e.clientY - lastMouseY;
         if (Math.abs(dx) > 1 || Math.abs(dy) > 1) rmbDragActive = true;
         cameraYaw -= dx * 0.005;
-        cameraPitch -= dy * 0.005;
+        cameraPitch += dy * 0.005;
         cameraPitch = Math.max(-0.5, Math.min(1.2, cameraPitch));
         lastMouseX = e.clientX; lastMouseY = e.clientY;
         document.getElementById('xhair').classList.add('rmb-drag');

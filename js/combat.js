@@ -6,6 +6,7 @@
       if (player.isDashing) { performDashAtk(); return; }
       player.isAttacking = true; player.attackTimer = 0.25; player.lightAttackCD = 0.35;
       player.comboCount++; player.comboTimer = player.comboWindow;
+      if (typeof updateQuestProgress !== 'undefined') updateQuestProgress('combo', player.comboCount);
       // Store which attack type for animation system
       player.currentAttackType = 'light'; player.currentComboHit = player.comboCount;
       updateComboUI();

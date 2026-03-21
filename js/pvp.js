@@ -162,6 +162,7 @@
 
     function killPvpBot(bot) {
       bot.dead = true; bot.deaths++; bot.group.visible = false; pvpWins++; totalKills++;
+      if (typeof updateQuestProgress !== 'undefined') updateQuestProgress('kill_pvp', 1);
       for (let i = 0; i < 20; i++)spawnParticle(bot.group.position.clone().add(new THREE.Vector3(0, 1.5, 0)), new THREE.Vector3((Math.random() - 0.5) * 8, Math.random() * 6, (Math.random() - 0.5) * 8), bot.tech.hex, 0.15, 1 + Math.random() * 0.5);
       const pvpCoins = 100 + Math.floor(Math.random() * 100);
       addKillMsg(`⚔ DEFEATED ${bot.name} (${bot.tech.name})! +200XP +${pvpCoins}🪙`, '#44ffcc');

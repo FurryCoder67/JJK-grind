@@ -158,6 +158,16 @@
     <div id="coins-display"><span id="coins-icon">🪙</span><span id="coins-val">0</span></div>
     <div id="save-indicator">✦ SAVED</div>
     <div id="wave-ann"></div>
+    <!-- NPC UI Elements -->
+    <div id="interact-prompt"
+      style="display:none; position:absolute; top:65%; left:50%; transform:translate(-50%, -50%); color:#fff; font-weight:bold; font-size:16px; text-shadow:0 2px 4px #000; background:rgba(0,0,0,0.6); padding:8px 16px; border-radius:4px; border:1px solid rgba(255,255,255,0.2);">
+      [G] Talk</div>
+    <div id="dialog-ui"
+      style="display:none; position:absolute; bottom:10%; left:50%; transform:translateX(-50%); background:rgba(10,10,20,0.95); border:2px solid #44ffaa; border-radius:8px; padding:20px; width:650px; color:#fff; font-family:'Courier New', monospace; text-align:center; box-shadow:0 0 30px rgba(68,255,170,0.3); z-index:100; pointer-events:none;">
+      <h3 id="dialog-name" style="margin:0 0 10px 0; color:#44ffaa; text-transform:uppercase;"></h3>
+      <p id="dialog-text" style="margin:0; font-size:15px; line-height:1.5;"></p>
+      <div style="margin-top:15px; font-size:11px; color:#888;">[Press G to continue]</div>
+    </div>
   </div>
 
   <!-- HOME HUB PANEL -->
@@ -227,6 +237,7 @@
   <script src="js/pvp.js"></script>
   <script src="js/abilities.js"></script>
   <script src="js/ui.js"></script>
+  <script src="js/npcs.js"></script>
   <script src="js/effects.js"></script>
   <script src="js/vfx.js"></script>
   <script src="js/loot.js"></script>
